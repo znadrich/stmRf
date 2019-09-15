@@ -1,26 +1,17 @@
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(gganimate)
 
-p <- .0003
-alpha <- boot::logit(p)
-params <- rgamma(5, 10, 3)
-neighborhood_params = list(
-  beta = params[1],
-  gamma = params[2],
-  lambda = params[3],
-  kappa = params[4],
-  delta = params[5]
-)
-
 generate_params <- function(p_interact = .05, prev_param_mag = 0){
   interact <- runif(1)
-  if(prev_param_mag > 5) {
+  if(prev_param_mag > 2) {
     p_interact <- .8
   }
   
   if(interact <= p_interact){
-    params <- rgamma(5, 10, 3)
+    params <- rgamma(5, 20, 4)
+    params[-c(which.max(runif(5)))] <- rgamma(4, 1, 5)
   } else {
     params <- rgamma(5, 1, 5)
   }
@@ -42,8 +33,8 @@ generate_pixels_i_j <- function(theta_i_j, size){
 
 empty_grid <- function(grid_size){
   grid <- expand.grid(
-    latitude = seq(0, 1, 1/grid_size),
-    longitude = seq(0, 1, 1/grid_size)
+    latitude = round(seq(0, 1, 1/grid_size), 2),
+    longitude = round(seq(0, 1, 1/grid_size), 2)
   )
   
   return(grid)
@@ -56,10 +47,14 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
   has_event <- which(pixels == 1)
   
   grid <- grid[has_event, ]
-  if(nrow(grid) > 0){
-    grid$t <- t
-    return(grid)
+  
+  if(nrow(grid) == 0){    
+    grid <- empty_grid(grid_size)
+    grid <- grid[sample(nrow(grid), 1), ]
   }
+  
+  grid$t <- t
+  return(grid)
 }
 
 map_params <- function(loc, params){
@@ -68,6 +63,31 @@ map_params <- function(loc, params){
   else if (loc %in% c('r', 'l')) as.numeric(params['lambda'])
   else if (loc %in% c('dr', 'ul')) as.numeric(params['kappa'])
   else if (loc %in% c('dl', 'ur')) as.numeric(params['delta'])
+}
+
+map_param_names <- function(loc){
+  inner_func <- function(loc){
+    if(loc == 'c') 'beta'
+    else if (loc %in% c('u', 'd')) 'gamma'
+    else if (loc %in% c('r', 'l')) 'lambda'
+    else if (loc %in% c('dr', 'ul')) 'kappa'
+    else if (loc %in% c('dl', 'ur')) 'delta'
+  }
+  
+  nm <- sapply(loc, inner_func)
+  return(nm)
+}
+
+all_param_names <- function(){
+  return(c('beta', 'gamma', 'lambda', 'kappa', 'delta'))
+}
+
+decimalplaces <- function(x) {
+  if ((x %% 1) != 0) {
+    nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
+  } else {
+    return(0)
+  }
 }
 
 eval_neighbors <- function(prior_grid, grid_size){
@@ -81,9 +101,11 @@ eval_neighbors <- function(prior_grid, grid_size){
     as.data.frame(stringsAsFactors = F) %>%
     lapply(unlist) %>%
     as.data.frame(stringsAsFactors = F)
-    
   
   names(g) <- c('latitude', 'longitude', 'eta')
+  
+  g$latitude <- round(g$latitude, decimalplaces(1/grid_size))
+  g$longitude <- round(g$longitude, decimalplaces(1/grid_size))
   
   return(g)
 }
@@ -114,7 +136,10 @@ gen_neighbors <- function(i, j, grid_size){
 }
 
 has_neighbors <- function(grid, prior_grid){
-  x <- which(grid$latitude %in% prior_grid$latitude & grid$longitude %in% prior_grid$longitude)
+  prior_grid$c <- 1
+  grid_pairs <- grid %>%
+    left_join(prior_grid, by = c('latitude', 'longitude'))
+  x <- which(grid_pairs$c == 1)
   return(x)
 }
 
@@ -163,69 +188,102 @@ generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_s
   has_event <- which(pixels == 1)
   
   grid <- grid[has_event, ]
-  if(nrow(grid) > 0){
-    grid$t <- t
-    return(grid)
+  
+  if(nrow(grid) == 0){    
+    grid <- empty_grid(grid_size)
+    grid <- grid[sample(nrow(grid), 1), ]
   }
+
+  grid$t <- t
+  return(grid)
 }
 
-t_v <- 1:100
-
-params <- generate_params(p_interact = 0.1)
-param_magnitude <- sum(params)
-neighborhood_params = list(
-  beta = params[1],
-  gamma = params[2],
-  lambda = params[3],
-  kappa = params[4],
-  delta = params[5]
-)
-
-grid_size <- 100
-x <- generate_grid_init(alpha, t = 1, grid_size = grid_size)
-x$magnitude <- ifelse(sum(params) > 5, "high", "low")
-for(t in t_v[-1]){
+get_prior_grid <- function(x,t ){
   prior_grid <- x[x$t == t-1, 1:2]
   if(is.null(prior_grid)){
     prior_grid <- data.frame()
   }
   
-  params <- generate_params(
-    p_interact = 0.1, 
-    prev_param_mag = tail(param_magnitude, 1)
-  )
-  
-  neighborhood_params = list(
-    beta = params[1]*0,
-    gamma = params[2],
-    lambda = params[3],
-    kappa = params[4],
-    delta = params[5]
-  )
-  param_magnitude <- c(param_magnitude, sum(params))
-  x_i <- generate_grid_main(alpha, prior_grid, t, neighborhood_params, grid_size = grid_size)
-  if(!is.null(x_i)){
-    x_i$magnitude <- ifelse(sum(params) > 5, "high", "low")
-    x <- rbind(x, x_i)
-  }
+  return(prior_grid)
 }
 
-plot(param_magnitude, type = 'l')
+update_data <- function(x_i, x, params, cutoff){
+  if(!is.null(x_i)){
+    x_i$magnitude <- ifelse(sum(params) > cutoff, "high", "low")
+    x <- rbind(x, x_i)
+  }
+  
+  return(x)
+}
 
-anim <- x %>%
-  mutate(begin = as.integer(t),
-         length = as.integer(1*2),
-         exit = as.integer(1)) %>%
-  ggplot(aes(x = latitude, y = longitude)) +
-  geom_point(aes(color = magnitude)) +
-  scale_x_continuous(limits = c(0, 1)) +
-  scale_y_continuous(limits = c(0, 1)) +
-    transition_events(start = begin,
-                      end = begin + length,
-                      enter_length = as.integer(1),
-                      exit_length = as.integer(1)) +
-    ggtitle('{frame_time}')
+eval_cliques <- function(grid_i, prior_grid, grid_size){
+  neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
+    mutate(eta = map_param_names(eta))
+  
+  if(!is.null(grid_i)){
+    grid_i <- grid_i %>%
+      select(-t) %>%
+      mutate(eta = 'alpha')
+    neighbors_prior <- rbind(neighbors_prior, grid_i)
+  }
+  
+  grid <- empty_grid(grid_size) %>%
+    left_join(neighbors_prior, by = c('latitude', 'longitude'))
+}
 
+n_clique <- function(cliques){
+  cliques %>% 
+    filter(!is.na(eta)) %>%
+    group_by(eta) %>% 
+    summarize(n=n()) %>%
+    return()
+}
 
-fps <- 2
-animate(anim, fps=fps)
+clique_delta <- function(param, event){
+  d <- (1-event)*param - event*param
+  return(d)
+}
+
+grid_cliques <- function(grid_i, prior_grid, grid_size){
+  cliques <- eval_cliques(grid_i, prior_grid, grid_size)
+  
+  grid <- cliques %>% 
+    mutate(eta=coalesce(eta, 'none')) %>% 
+    group_by(latitude, longitude, eta) %>% 
+    summarise(n=n()) %>%
+    spread(eta, n) %>%
+    mutate(event=ifelse(alpha == 0, 0, 1)) 
+  
+  grid[is.na(grid)] <- 0
+  grid <- grid %>%
+    mutate(alpha=beta+delta+gamma+kappa+lambda)
+  # grid <- grid %>%
+  #   mutate(
+  #     alpha=clique_delta(beta+delta+gamma+kappa+lambda, event),
+  #     beta=clique_delta(beta, event),
+  #     delta=clique_delta(delta, event),
+  #     gamma=clique_delta(gamma, event),
+  #     kappa=clique_delta(kappa, event),
+  #     lambda=clique_delta(lambda, event),
+  #   )
+  
+  return(grid)
+}
+
+pmle <- function(grid_i, prior_grid, grid_size){
+  grid <- grid_cliques(grid_i, prior_grid, grid_size)
+  log_reg <- glm(
+    event ~ beta+delta+gamma+kappa+lambda,
+    data = grid,
+    family = binomial(link='logit'),
+    control = glm.control(maxit = 100)
+  )
+  ple <- log_reg$coefficients
+  return(ple)
+}
+
+plot_param <- function(real, estimate, param){
+  v_real <- real[, param]
+  v_est <- estimate[, param]
+  plot(v_real[v_real > 1], v_est[v_real > 1], main=param)
+}
