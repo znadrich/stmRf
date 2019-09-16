@@ -10,8 +10,7 @@ generate_params <- function(p_interact = .05, prev_param_mag = 0){
   }
   
   if(interact <= p_interact){
-    params <- rgamma(5, 20, 4)
-    params[-c(which.max(runif(5)))] <- rgamma(4, 1, 5)
+    params <- rgamma(5, 1, 1)
   } else {
     params <- rgamma(5, 1, 5)
   }
@@ -198,7 +197,7 @@ generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_s
   return(grid)
 }
 
-get_prior_grid <- function(x,t ){
+get_prior_grid <- function(x, t){
   prior_grid <- x[x$t == t-1, 1:2]
   if(is.null(prior_grid)){
     prior_grid <- data.frame()
@@ -255,8 +254,7 @@ grid_cliques <- function(grid_i, prior_grid, grid_size){
     mutate(event=ifelse(alpha == 0, 0, 1)) 
   
   grid[is.na(grid)] <- 0
-  grid <- grid %>%
-    mutate(alpha=beta+delta+gamma+kappa+lambda)
+  grid$alpha <- grid$beta+grid$delta+grid$gamma+grid$kappa+grid$lambda
   # grid <- grid %>%
   #   mutate(
   #     alpha=clique_delta(beta+delta+gamma+kappa+lambda, event),
@@ -284,6 +282,14 @@ pmle <- function(grid_i, prior_grid, grid_size){
 
 plot_param <- function(real, estimate, param){
   v_real <- real[, param]
-  v_est <- estimate[, param]
-  plot(v_real[v_real > 1], v_est[v_real > 1], main=param)
+  v_est <- estimate[, param]  
+  plot(v_real, type='l', col='red')
+  lines(v_est, col='blue')
+  legend(
+    'topleft', 
+    c('real', 'estimate'), 
+    lty=c(1, 1), 
+    col=c('red', 'blue'),
+    cex=.8
+  )
 }

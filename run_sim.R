@@ -1,7 +1,7 @@
 setwd('/Users/Zack/Dropbox/Thesis/R')
 source('simulate_time_dependence.R')
 
-p <- .001
+p <- .005
 alpha <- boot::logit(p)
 params <- rgamma(5, 10, 2)
 neighborhood_params = list(
@@ -67,10 +67,10 @@ for(t in t_v[-1]){
   param_magnitude <- c(param_magnitude, sum(params))
   
   x_i <- generate_grid_main(alpha, prior_grid, t, neighborhood_params, grid_size = grid_size)
-  x <- update_data(x_i, x, params, 2)
   
   ple <- rbind(ple, pmle(x_i, prior_grid, grid_size))
   real_params <- rbind(real_params, as.data.frame(neighborhood_params))
+  x <- update_data(x_i, x, params, 2)
 }
 names(ple) <- ple_names
 real_params$alpha <- alpha
@@ -80,7 +80,7 @@ par(mfrow=c(2,2))
 for(p in all_param_names()[-1]){
   plot_param(real_params, ple, p)
 }
-
+par(mfrow=c(1,1))
 
 anim <- x %>%
   mutate(begin = as.integer(t),
