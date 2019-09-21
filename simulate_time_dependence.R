@@ -283,7 +283,7 @@ pmle <- function(grid_i, prior_grid, grid_size){
 plot_param <- function(real, estimate, param){
   v_real <- real[, param]
   v_est <- estimate[, param]  
-  plot(v_real, type='l', col='red')
+  plot(v_real, type='l', col='red', main=param)
   lines(v_est, col='blue')
   legend(
     'topleft', 
