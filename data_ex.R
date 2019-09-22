@@ -96,9 +96,9 @@ long_boundaries <- c(
     quantile(df$longitude[df$longitude != 0], .95)
   )
 
-dates <- '04/20/2018' 
+dates <- '04/18/2015' 
 
-hours <- 10:15
+hours <- 0:23
 
 filtered_df <- df %>%
   select(-datetime) %>%
@@ -125,8 +125,8 @@ anim <- plot_df %>%
   theme_classic() +
   transition_events(start = begin,
                     end = begin + length,
-                    enter_length = 1,
-                    exit_length = 1) +
+                    enter_length = 0,
+                    exit_length = 0) +
   ggtitle(paste(dates, '{frame_title(frame_time)}'))
 
 fps <- 5
