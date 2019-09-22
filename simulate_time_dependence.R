@@ -268,8 +268,14 @@ grid_cliques <- function(grid_i, prior_grid, grid_size){
     mutate(eta=coalesce(eta, 'none')) %>% 
     group_by(latitude, longitude, eta) %>% 
     summarise(n=n()) %>%
-    spread(eta, n) %>%
-    mutate(event=ifelse(alpha == 0, 0, 1)) 
+    spread(eta, n)
+    
+    if(!('alpha' %in% colnames(grid))){
+      grid$alpha <- 0
+    } 
+    
+    grid <- grid %>%
+      mutate(event=ifelse(alpha == 0, 0, 1)) 
   
   grid[is.na(grid)] <- 0
   grid$alpha <- grid$beta+grid$delta+grid$gamma+grid$kappa+grid$lambda
