@@ -3,19 +3,35 @@ library(tidyr)
 library(ggplot2)
 library(gganimate)
 
-generate_params <- function(p_interact = .05, prev_param_mag = 0){
-  interact <- runif(1)
-  if(prev_param_mag > 2) {
+generate_params <- function(p_interact = .05, prev_interact = F){
+  if(prev_interact) {
     p_interact <- .8
   }
   
-  if(interact <= p_interact){
-    params <- rgamma(5, 1, 1)
-  } else {
-    params <- rgamma(5, 1, 5)
+  if(runif(1) <= p_interact){
+    interact <- T
+    params <- rgamma(5, 1, .5)
+  } else {    
+    interact <- F
+    params <- rgamma(5, 1, 20)
   }
+
+  neighborhood_params <- list(
+    beta = params[1]*0,
+    gamma = params[2],
+    lambda = params[3],
+    kappa = params[4]*0,
+    delta = params[5]*0
+  )
   
-  return(params)
+  return_list <- list(params=neighborhood_params, interact=interact)
+  return(return_list)
+}
+
+get_param_maginitude <- function(params){
+  magnitude <- sum(as.numeric(params))
+  
+  return(magnitude)
 }
 
 generate_pixels <- function(alpha, size){
@@ -77,8 +93,10 @@ map_param_names <- function(loc){
   return(nm)
 }
 
-all_param_names <- function(){
-  return(c('beta', 'gamma', 'lambda', 'kappa', 'delta'))
+all_param_names <- function(drop_beta=F){
+  if(drop_beta) v <- c('alpha', 'gamma', 'lambda', 'kappa', 'delta')
+  else v <- c('alpha', 'beta', 'gamma', 'lambda', 'kappa', 'delta')
+  return(v)
 }
 
 decimalplaces <- function(x) {
@@ -167,7 +185,7 @@ neighbor_hood_calculations <- function(grid, prior_grid, grid_size, neighborhood
     ungroup
   return(neighbors)
 }
-  
+
 generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_size = 100){
   grid <- empty_grid(grid_size)
   
@@ -192,7 +210,7 @@ generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_s
     grid <- empty_grid(grid_size)
     grid <- grid[sample(nrow(grid), 1), ]
   }
-
+  
   grid$t <- t
   return(grid)
 }
@@ -206,9 +224,9 @@ get_prior_grid <- function(x, t){
   return(prior_grid)
 }
 
-update_data <- function(x_i, x, params, cutoff){
+update_data <- function(x_i, x, params, interact){
   if(!is.null(x_i)){
-    x_i$magnitude <- ifelse(sum(params) > cutoff, "high", "low")
+    x_i$magnitude <- ifelse(interact, "high", "low")
     x <- rbind(x, x_i)
   }
   
@@ -276,7 +294,12 @@ pmle <- function(grid_i, prior_grid, grid_size){
     family = binomial(link='logit'),
     control = glm.control(maxit = 100)
   )
+  
   ple <- log_reg$coefficients
+  
+  # Get standard error, if the coef blew up then set to 0
+  se <- sqrt(diag(vcov(log_reg)))
+  ple[se > 1000] <- 0
   return(ple)
 }
 

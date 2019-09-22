@@ -2,41 +2,26 @@ setwd('/Users/Zack/Dropbox/Thesis/R')
 source('simulate_time_dependence.R')
 
 p <- .005
-alpha <- boot::logit(p)
-params <- rgamma(5, 10, 2)
-neighborhood_params = list(
-  beta = params[1],
-  gamma = params[2],
-  lambda = params[3],
-  kappa = params[4],
-  delta = params[5]
-)
-
-t_v <- 1:100
-
-params <- generate_params(p_interact = 0.1)
-param_magnitude <- sum(params)
-neighborhood_params = list(
-  beta = params[1],
-  gamma = params[2],
-  lambda = params[3],
-  kappa = params[4],
-  delta = params[5]
-)
-
 grid_size <- 50
-x <- generate_grid_init(alpha, t = 1, grid_size = grid_size)
+t_v <- 1:100
+cutoff <- 2
 
-x$magnitude <- ifelse(sum(params) > 5, "high", "low")
+alpha <- boot::logit(p)
+neighborhood_params <- generate_params(p_interact = 0.1)
+x <- generate_grid_init(alpha, t = 1, grid_size = grid_size)
+param_magnitude <- get_param_maginitude(neighborhood_params$params)
+interact <- neighborhood_params$interact
+x$magnitude <- ifelse(neighborhood_params$interact, "high", "low")
 
 ple <- data.frame(
-  int=numeric(0),
+  alpha=numeric(0),
   beta=numeric(0),
   delta=numeric(0),
   gamma=numeric(0),
   kappa=numeric(0),
   lambda=numeric(0)
 )
+
 ple_names <- names(ple)
 
 real_params <- data.frame(
@@ -51,33 +36,26 @@ for(t in t_v[-1]){
   print(t)
   prior_grid <- get_prior_grid(x, t)
   
-  params <- generate_params(
+  neighborhood_params <- generate_params(
     p_interact = 0.1, 
-    prev_param_mag = tail(param_magnitude, 1)
+    prev_interact = neighborhood_params$interact
   )
   
-  neighborhood_params = list(
-    beta = params[1]*0,
-    gamma = params[2],
-    lambda = params[3],
-    kappa = params[4],
-    delta = params[5]
-  )
+  interact <- c(interact, neighborhood_params$interact)
+  param_magnitude <- c(param_magnitude, get_param_maginitude(neighborhood_params$params))
   
-  param_magnitude <- c(param_magnitude, sum(params))
-  
-  x_i <- generate_grid_main(alpha, prior_grid, t, neighborhood_params, grid_size = grid_size)
+  x_i <- generate_grid_main(alpha, prior_grid, t, neighborhood_params$params, grid_size = grid_size)
   
   ple <- rbind(ple, pmle(x_i, prior_grid, grid_size))
-  real_params <- rbind(real_params, as.data.frame(neighborhood_params))
-  x <- update_data(x_i, x, params, 2)
+  real_params <- rbind(real_params, as.data.frame(neighborhood_params$params))
+  x <- update_data(x_i, x, as.numeric(neighborhood_params), neighborhood_params$interact)
 }
 names(ple) <- ple_names
 real_params$alpha <- alpha
 plot(param_magnitude, type='l')
 
-par(mfrow=c(2,2))
-for(p in all_param_names()[-1]){
+par(mfrow=c(2,3))
+for(p in all_param_names(drop_beta=T)){
   plot_param(real_params, ple, p)
 }
 par(mfrow=c(1,1))
