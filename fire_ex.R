@@ -4,6 +4,7 @@ library(sf)
 library(stringr)
 library(maps)
 library(maptools)
+library(lubridate)
 
 latlong2state <- function(pointsDF) {
   # Prepare SpatialPolygons object with one SpatialPolygon
@@ -98,10 +99,14 @@ t_v <- 1:max(df$t)
 ple <- data.frame(
   alpha=0,
   beta=0,
-  delta=0,
-  gamma=0,
-  kappa=0,
-  lambda=0,
+  gamma_d=0,
+  gamma_u=0,
+  lambda_l=0,
+  lambda_r=0,
+  kappa_dr=0,
+  kappa_ul=0,
+  delta_ur=0,
+  delta_dl=0,
   t=1
 )
 
@@ -113,7 +118,9 @@ for(t in t_v[-1]){
   print(t)
   x_i <- unique(df[df$t == t, c('latitude', 'longitude', 't')])
     
-  prior_grid <- unique(get_prior_grid(df, t))
+  prior_grid <- df[, c('latitude', 'longitude', 't')] %>%
+                     get_prior_grid(t) %>%
+                     unique()
   
   cliques <- grid_cliques(grid_i = x_i, prior_grid = prior_grid, grid_size)
   
@@ -124,8 +131,9 @@ for(t in t_v[-1]){
 }
 
 names(ple) <- ple_names
-par(mfrow=c(2,3))
-for(p in all_param_names(drop_beta=F)){
+plot_param(ple, p='alpha', dates=dates$notable)
+par(mfrow=c(3,3))
+for(p in all_param_names(drop_alpha=T, drop_beta=F)){
   plot_param(ple, p, dates=dates$notable)
 }
 par(mfrow=c(1,1))

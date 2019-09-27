@@ -74,28 +74,45 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
 
 map_params <- function(loc, params){
   if(loc == 'c') as.numeric(params['beta'])
-  else if (loc %in% c('u', 'd')) as.numeric(params['gamma'])
-  else if (loc %in% c('r', 'l')) as.numeric(params['lambda'])
-  else if (loc %in% c('dr', 'ul')) as.numeric(params['kappa'])
-  else if (loc %in% c('dl', 'ur')) as.numeric(params['delta'])
+  else if (loc == 'd') as.numeric(params['gamma_d'])
+  else if (loc == 'u') as.numeric(params['gamma_u'])
+  else if (loc == 'l') as.numeric(params['lambda_l'])
+  else if (loc == 'r') as.numeric(params['lambda_r'])
+  else if (loc == 'dr') as.numeric(params['kappa_dr'])
+  else if (loc =='ul') as.numeric(params['kappa_ul'])
+  else if (loc == 'ur') as.numeric(params['delta_ur'])
+  else if (loc == 'dl') as.numeric(params['delta_dl'])
 }
 
 map_param_names <- function(loc){
   inner_func <- function(loc){
     if(loc == 'c') 'beta'
-    else if (loc %in% c('u', 'd')) 'gamma'
-    else if (loc %in% c('r', 'l')) 'lambda'
-    else if (loc %in% c('dr', 'ul')) 'kappa'
-    else if (loc %in% c('dl', 'ur')) 'delta'
+    else if (loc == 'd') 'gamma_d'
+    else if (loc == 'u') 'gamma_u'
+    else if (loc == 'l') 'lambda_l'
+    else if (loc == 'r') 'lambda_r'
+    else if (loc == 'dr') 'kappa_dr'
+    else if (loc =='ul') 'kappa_ul'
+    else if (loc == 'ur') 'delta_ur'
+    else if (loc == 'dl') 'delta_dl'
   }
   
   nm <- sapply(loc, inner_func)
   return(nm)
 }
 
-all_param_names <- function(drop_beta=F){
-  if(drop_beta) v <- c('alpha', 'gamma', 'lambda', 'kappa', 'delta')
-  else v <- c('alpha', 'beta', 'gamma', 'lambda', 'kappa', 'delta')
+all_param_names <- function(drop_alpha=F, drop_beta=F){
+  directional_params <- c(
+    'gamma_d', 'gamma_u', 
+    'lambda_l', 'lambda_r', 
+    'kappa_dr', 'kappa_ul', 
+    'delta_ur', 'delta_dl'  
+  )
+
+  v <- c('alpha', 'beta', directional_params)
+  if (drop_alpha) v <- v[v != 'alpha']
+  if (drop_beta) v <- v[v != 'beta']
+
   return(v)
 }
 
@@ -278,7 +295,16 @@ grid_cliques <- function(grid_i, prior_grid, grid_size){
       mutate(event=ifelse(alpha == 0, 0, 1)) 
   
   grid[is.na(grid)] <- 0
-  grid$alpha <- grid$beta+grid$delta+grid$gamma+grid$kappa+grid$lambda
+  grid$alpha <- 
+    grid$beta +
+    grid$gamma_d +
+    grid$gamma_u +
+    grid$lambda_l +
+    grid$lambda_r +
+    grid$kappa_dr +
+    grid$kappa_ul +
+    grid$delta_ur +
+    grid$delta_dl
   # grid <- grid %>%
   #   mutate(
   #     alpha=clique_delta(beta+delta+gamma+kappa+lambda, event),
@@ -293,8 +319,10 @@ grid_cliques <- function(grid_i, prior_grid, grid_size){
 }
 
 pmle <- function(cliques){
+  params <- all_param_names(drop_alpha=T, drop_beta=F)
+  formula <- reformulate(params, 'event')
   log_reg <- glm(
-    event ~ beta+delta+gamma+kappa+lambda,
+    formula,
     data = cliques,
     family = binomial(link='logit'),
     control = glm.control(maxit = 100)
@@ -308,19 +336,18 @@ pmle <- function(cliques){
   return(ple)
 }
 
-plot_param <- function(real, estimate, param){
-  v_real <- real[, param]
-  v_est <- estimate[, param]  
-  plot(
-    v_real, ylim=range(v_real, v_est),
-    type='l', col='red', main=param
-  )
-  lines(v_est, col='blue')
-  legend(
-    'topleft', 
-    c('real', 'estimate'), 
-    lty=c(1, 1), 
-    col=c('red', 'blue'),
-    bty='n'
-  )
+plot_param <- function(estimate, param, dates){
+  colors = c('red', 'blue', 'green', 'cyan')
+  dates <- as.factor(dates)
+  ix <- estimate$t
+  v_est <- estimate[, param]
+  lvls <- levels(dates)
+  plot(ix[dates == lvls[1]], v_est[dates == lvls[1]],
+       col=colors[1], type='l',
+       xlim = range(ix), ylim = range(v_est),
+       main=param, xlab='index', ylab='estimate')
+  for(i in 2:length(lvls)){
+    lines(ix[dates == lvls[i]], v_est[dates == lvls[i]], col=colors[i])
+  }
+  if(param == 'alpha') legend('topleft', legend = lvls, col = colors, lty=rep(1, length(lvls)))
 }
