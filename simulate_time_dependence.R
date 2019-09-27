@@ -20,8 +20,8 @@ generate_params <- function(p_interact = .05, prev_interact = F){
     beta = params[1]*0,
     gamma = params[2],
     lambda = params[3],
-    kappa = params[4]*0,
-    delta = params[5]*0
+    kappa = params[4],
+    delta = params[5]
   )
   
   return_list <- list(params=neighborhood_params, interact=interact)
@@ -110,8 +110,8 @@ decimalplaces <- function(x) {
 eval_neighbors <- function(prior_grid, grid_size){
   g <- mapply(
     FUN = gen_neighbors,
-    i = prior_grid$latitude, 
-    j = prior_grid$longitude,
+    i = prior_grid$longitude, 
+    j = prior_grid$latitude,
     grid_size = grid_size
   ) %>%
     do.call(rbind, .) %>%
@@ -119,7 +119,7 @@ eval_neighbors <- function(prior_grid, grid_size){
     lapply(unlist) %>%
     as.data.frame(stringsAsFactors = F)
   
-  names(g) <- c('latitude', 'longitude', 'eta')
+  names(g) <- c('longitude', 'latitude', 'eta')
   
   g$latitude <- round(g$latitude, decimalplaces(1/grid_size))
   g$longitude <- round(g$longitude, decimalplaces(1/grid_size))
@@ -292,11 +292,10 @@ grid_cliques <- function(grid_i, prior_grid, grid_size){
   return(grid)
 }
 
-pmle <- function(grid_i, prior_grid, grid_size){
-  grid <- grid_cliques(grid_i, prior_grid, grid_size)
+pmle <- function(cliques){
   log_reg <- glm(
     event ~ beta+delta+gamma+kappa+lambda,
-    data = grid,
+    data = cliques,
     family = binomial(link='logit'),
     control = glm.control(maxit = 100)
   )
@@ -305,20 +304,23 @@ pmle <- function(grid_i, prior_grid, grid_size){
   
   # Get standard error, if the coef blew up then set to 0
   se <- sqrt(diag(vcov(log_reg)))
-  ple[se > 1000] <- 0
+  ple[se > 100] <- 0
   return(ple)
 }
 
 plot_param <- function(real, estimate, param){
   v_real <- real[, param]
   v_est <- estimate[, param]  
-  plot(v_real, type='l', col='red', main=param)
+  plot(
+    v_real, ylim=range(v_real, v_est),
+    type='l', col='red', main=param
+  )
   lines(v_est, col='blue')
   legend(
     'topleft', 
     c('real', 'estimate'), 
     lty=c(1, 1), 
     col=c('red', 'blue'),
-    cex=.8
+    bty='n'
   )
 }
