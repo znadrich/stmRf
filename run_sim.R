@@ -46,9 +46,18 @@ for(t in t_v[-1]){
   
   x_i <- generate_grid_main(alpha, prior_grid, t, neighborhood_params$params, grid_size = grid_size)
   
-  ple <- rbind(ple, pmle(x_i, prior_grid, grid_size))
+  cliques <- grid_cliques(grid_i = x_i, prior_grid = prior_grid, grid_size)
+  
+  ple_i <- pmle(cliques)
+  
+  ple <- rbind(ple, ple_i)
   real_params <- rbind(real_params, as.data.frame(neighborhood_params$params))
-  x <- update_data(x_i, x, as.numeric(neighborhood_params), neighborhood_params$interact)
+  x <- update_data(
+    x_i = x_i, 
+    x = x, 
+    params = as.numeric(neighborhood_params), 
+    interact = neighborhood_params$interact
+  )
 }
 names(ple) <- ple_names
 real_params$alpha <- alpha
@@ -67,7 +76,8 @@ anim <- x %>%
   ggplot(aes(x = latitude, y = longitude)) +
   geom_point(aes(color = magnitude)) +
   scale_x_continuous(limits = c(0, 1)) +
-  scale_y_continuous(limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, 1)) + 
+  theme_classic() +
   transition_events(start = begin,
                     end = begin + length,
                     enter_length = as.integer(0),
