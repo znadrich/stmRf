@@ -72,44 +72,68 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
   return(grid)
 }
 
-map_params <- function(loc, params){
-  if(loc == 'c') as.numeric(params['beta'])
-  else if (loc == 'd') as.numeric(params['gamma_d'])
-  else if (loc == 'u') as.numeric(params['gamma_u'])
-  else if (loc == 'l') as.numeric(params['lambda_l'])
-  else if (loc == 'r') as.numeric(params['lambda_r'])
-  else if (loc == 'dr') as.numeric(params['kappa_dr'])
-  else if (loc =='ul') as.numeric(params['kappa_ul'])
-  else if (loc == 'ur') as.numeric(params['delta_ur'])
-  else if (loc == 'dl') as.numeric(params['delta_dl'])
+map_params <- function(loc, params, directional=T){
+  if (directional){
+    if(loc == 'c') as.numeric(params['beta'])
+    else if (loc == 'd') as.numeric(params['gamma_d'])
+    else if (loc == 'u') as.numeric(params['gamma_u'])
+    else if (loc == 'l') as.numeric(params['lambda_l'])
+    else if (loc == 'r') as.numeric(params['lambda_r'])
+    else if (loc == 'dr') as.numeric(params['kappa_dr'])
+    else if (loc =='ul') as.numeric(params['kappa_ul'])
+    else if (loc == 'ur') as.numeric(params['delta_ur'])
+    else if (loc == 'dl') as.numeric(params['delta_dl'])
+  } else {
+    if(loc == 'c') as.numeric(params['beta'])
+    else if (loc %in% c('u', 'd')) as.numeric(params['gamma'])
+    else if (loc %in% c('r', 'l')) as.numeric(params['lambda'])
+    else if (loc %in% c('dr', 'ul')) as.numeric(params['kappa'])
+    else if (loc %in% c('dl', 'ur')) as.numeric(params['delta'])
+  }
+  
 }
 
-map_param_names <- function(loc){
-  inner_func <- function(loc){
-    if(loc == 'c') 'beta'
-    else if (loc == 'd') 'gamma_d'
-    else if (loc == 'u') 'gamma_u'
-    else if (loc == 'l') 'lambda_l'
-    else if (loc == 'r') 'lambda_r'
-    else if (loc == 'dr') 'kappa_dr'
-    else if (loc =='ul') 'kappa_ul'
-    else if (loc == 'ur') 'delta_ur'
-    else if (loc == 'dl') 'delta_dl'
-  }
+map_param_names <- function(loc, directional=T){
+  if (directional){
+    inner_func <- function(loc){
+      if(loc == 'c') 'beta'
+      else if (loc == 'd') 'gamma_d'
+      else if (loc == 'u') 'gamma_u'
+      else if (loc == 'l') 'lambda_l'
+      else if (loc == 'r') 'lambda_r'
+      else if (loc == 'dr') 'kappa_dr'
+      else if (loc =='ul') 'kappa_ul'
+      else if (loc == 'ur') 'delta_ur'
+      else if (loc == 'dl') 'delta_dl'
+    }
+  } else {
+    inner_func <- function(loc){
+      if(loc == 'c') 'beta'
+      else if (loc %in% c('u', 'd')) 'gamma'
+      else if (loc %in% c('r', 'l')) 'lambda'
+      else if (loc %in% c('dr', 'ul')) 'kappa'
+      else if (loc %in% c('dl', 'ur')) 'delta'
+    }
+  } 
   
   nm <- sapply(loc, inner_func)
   return(nm)
 }
 
-all_param_names <- function(drop_alpha=F, drop_beta=F){
-  directional_params <- c(
-    'gamma_d', 'gamma_u', 
-    'lambda_l', 'lambda_r', 
-    'kappa_dr', 'kappa_ul', 
-    'delta_ur', 'delta_dl'  
-  )
+all_param_names <- function(drop_alpha=F, drop_beta=F, directional=T){
+  if (directional){
+    directional_params <- c(
+      'gamma_d', 'gamma_u', 
+      'lambda_l', 'lambda_r', 
+      'kappa_dr', 'kappa_ul', 
+      'delta_ur', 'delta_dl'  
+    )
 
-  v <- c('alpha', 'beta', directional_params)
+    v <- c('alpha', 'beta', directional_params)
+  } else {
+    v <- c('alpha', 'beta', 'gamma', 'lambda', 'kappa', 'delta')
+  }
+  
   if (drop_alpha) v <- v[v != 'alpha']
   if (drop_beta) v <- v[v != 'beta']
 
@@ -250,9 +274,9 @@ update_data <- function(x_i, x, params, interact){
   return(x)
 }
 
-eval_cliques <- function(grid_i, prior_grid, grid_size){
+eval_cliques <- function(grid_i, prior_grid, grid_size, directional=T){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
-    mutate(eta = map_param_names(eta))
+    mutate(eta = map_param_names(eta, directional))
   
   if(!is.null(grid_i)){
     grid_i <- grid_i %>%
@@ -278,8 +302,8 @@ clique_delta <- function(param, event){
   return(d)
 }
 
-grid_cliques <- function(grid_i, prior_grid, grid_size){
-  cliques <- eval_cliques(grid_i, prior_grid, grid_size)
+grid_cliques <- function(grid_i, prior_grid, grid_size, directional=T){
+  cliques <- eval_cliques(grid_i, prior_grid, grid_size, directional)
   
   grid <- cliques %>% 
     mutate(eta=coalesce(eta, 'none')) %>% 
@@ -295,31 +319,27 @@ grid_cliques <- function(grid_i, prior_grid, grid_size){
       mutate(event=ifelse(alpha == 0, 0, 1)) 
   
   grid[is.na(grid)] <- 0
-  grid$alpha <- 
-    grid$beta +
-    grid$gamma_d +
-    grid$gamma_u +
-    grid$lambda_l +
-    grid$lambda_r +
-    grid$kappa_dr +
-    grid$kappa_ul +
-    grid$delta_ur +
-    grid$delta_dl
-  # grid <- grid %>%
-  #   mutate(
-  #     alpha=clique_delta(beta+delta+gamma+kappa+lambda, event),
-  #     beta=clique_delta(beta, event),
-  #     delta=clique_delta(delta, event),
-  #     gamma=clique_delta(gamma, event),
-  #     kappa=clique_delta(kappa, event),
-  #     lambda=clique_delta(lambda, event),
-  #   )
-  
+
+  if (directional){
+    grid$alpha <- 
+        grid$beta +
+        grid$gamma_d +
+        grid$gamma_u +
+        grid$lambda_l +
+        grid$lambda_r +
+        grid$kappa_dr +
+        grid$kappa_ul +
+        grid$delta_ur +
+        grid$delta_dl
+  } else {
+    grid$alpha <- grid$beta+grid$delta+grid$gamma+grid$kappa+grid$lambda
+  }
+    
   return(grid)
 }
 
-pmle <- function(cliques){
-  params <- all_param_names(drop_alpha=T, drop_beta=F)
+pmle <- function(cliques, directional=T){
+  params <- all_param_names(drop_alpha=T, drop_beta=F, directional=directional)
   formula <- reformulate(params, 'event')
   log_reg <- glm(
     formula,
@@ -334,6 +354,36 @@ pmle <- function(cliques){
   se <- sqrt(diag(vcov(log_reg)))
   ple[se > 100] <- 0
   return(ple)
+}
+
+ple_df <- function(directional=T){
+  if (directional){
+    df <- data.frame(
+      alpha=0,
+      beta=0,
+      gamma_d=0,
+      gamma_u=0,
+      lambda_l=0,
+      lambda_r=0,
+      kappa_dr=0,
+      kappa_ul=0,
+      delta_ur=0,
+      delta_dl=0,
+      t=1
+    )
+  } else {
+    df <- data.frame(
+      alpha=0,
+      beta=0,
+      delta=0,
+      gamma=0,
+      kappa=0,
+      lambda=0,
+      t=1
+    )
+  }
+  
+  return(df)
 }
 
 plot_param <- function(estimate, param, dates){

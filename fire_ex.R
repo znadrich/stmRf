@@ -89,30 +89,18 @@ filtered <- df %>%
 
 df$index <- as.numeric(paste(df$JULIAN, df$hr, sep = ''))
 df <- df[!(df$JULIAN %in% filtered), ]
-df$t <- dense_rank(df$JULIAN)
+df$t <- dense_rank(df$index)
 dates <- unique(df[, c('t', 'DATE')]) %>%
   arrange(t)
 dates$notable <- ifelse(month(dates$DATE) %in% c(7,8), "Jul-Aug", ifelse(month(dates$DATE) == 11, 'Nov', ifelse(month(dates$DATE) < 7, 'pre-Jul', 'Sep-Oct')))
 dates$notable <- factor(dates$notable, levels = c('pre-Jul', 'Jul-Aug', 'Sep-Oct', 'Nov'))
 t_v <- 1:max(df$t)
 
-ple <- data.frame(
-  alpha=0,
-  beta=0,
-  gamma_d=0,
-  gamma_u=0,
-  lambda_l=0,
-  lambda_r=0,
-  kappa_dr=0,
-  kappa_ul=0,
-  delta_ur=0,
-  delta_dl=0,
-  t=1
-)
-
-ple_names <- names(ple)
-
 grid_size <- 100
+directional <- FALSE
+
+ple <- ple_df(directional)
+ple_names <- names(ple)
 
 for(t in t_v[-1]){
   print(t)
@@ -122,18 +110,25 @@ for(t in t_v[-1]){
                      get_prior_grid(t) %>%
                      unique()
   
-  cliques <- grid_cliques(grid_i = x_i, prior_grid = prior_grid, grid_size)
+  cliques <- grid_cliques(
+    grid_i = x_i, 
+    prior_grid = prior_grid, 
+    grid_size = grid_size,
+    directional = directional
+  )
   
-  ple_i <- pmle(cliques)
+  ple_i <- pmle(cliques = cliques, directional = directional)
   ple_i <- c(ple_i, t)
   
   ple <- rbind(ple, ple_i)
 }
 
+param_nms <- all_param_names(drop_alpha=T, drop_beta=F, directional)
+
 names(ple) <- ple_names
 plot_param(ple, p='alpha', dates=dates$notable)
 par(mfrow=c(3,3))
-for(p in all_param_names(drop_alpha=T, drop_beta=F)){
+for(p in param_nms){
   plot_param(ple, p, dates=dates$notable)
 }
 par(mfrow=c(1,1))
@@ -160,3 +155,35 @@ df %>%
   theme_classic() +
   scale_x_continuous(limits = long_boundaries) +
   scale_y_continuous(limits = lat_boundaries)
+
+ple_roll_mean <- ple_df(directional)
+ple_roll_var <- ple_df(directional)
+
+lag <- 20
+
+for(i in lag:nrow(ple)){
+  for(p in all_param_names()){
+    rolling <- ple[(i-lag):i, p]
+    ple_roll_mean[i-lag, p] <- mean(rolling)
+    ple_roll_var[i-lag, p] <- var(rolling)
+    ple_roll_mean[i-lag, 't'] <- i
+    ple_roll_var[i-lag, 't'] <- i
+  }
+}
+
+ple_roll_mean <- ple_roll_mean[-1, ]
+ple_roll_var <- ple_roll_var[-1, ]
+
+plot_param(ple_roll_mean, p='alpha', dates=dates$notable)
+par(mfrow=c(3,3))
+for(p in param_nms){
+  plot_param(ple_roll_mean, p, dates=dates$notable)
+}
+par(mfrow=c(1,1))
+
+plot_param(ple_roll_var, p='alpha', dates=dates$notable)
+par(mfrow=c(3,3))
+for(p in param_nms){
+  plot_param(ple_roll_var, p, dates=dates$notable)
+}
+par(mfrow=c(1,1))
