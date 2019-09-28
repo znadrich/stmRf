@@ -51,7 +51,7 @@ df %>%
   group_by(mnth) %>%
   summarize(n=n())
 
-df[month(df$DATE) == 9, ] %>%
+df[month(df$DATE) %in% c(7, 8), ] %>%
   mutate(mnth = month(DATE),
          begin = day(DATE),
          length = as.integer(1),
