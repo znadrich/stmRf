@@ -97,10 +97,12 @@ dates$notable <- factor(dates$notable, levels = c('pre-Jul', 'Jul-Aug', 'Sep-Oct
 t_v <- 1:max(df$t)
 
 grid_size <- 100
-directional <- FALSE
+directional <- TRUE
 
 ple <- ple_df(directional)
 ple_names <- names(ple)
+
+plr <- data.frame(lr = 0, p = 1, t = 1)
 
 for(t in t_v[-1]){
   print(t)
@@ -110,17 +112,25 @@ for(t in t_v[-1]){
                      get_prior_grid(t) %>%
                      unique()
   
-  cliques <- grid_cliques(
-    grid_i = x_i, 
-    prior_grid = prior_grid, 
-    grid_size = grid_size,
-    directional = directional
+  # cliques <- grid_cliques(
+  #   grid_i = x_i, 
+  #   prior_grid = prior_grid, 
+  #   grid_size = grid_size,
+  #   directional = directional
+  # )
+  # 
+  # ple_i <- pmle(cliques = cliques, directional = directional)
+  # ple_i <- c(ple_i, t)
+  # 
+  # ple <- rbind(ple, ple_i)
+  plr_i <- pseudoliklihood(
+    grid_i = x_i,
+    prior_grid = prior_grid,
+    grid_size = grid_size
   )
   
-  ple_i <- pmle(cliques = cliques, directional = directional)
-  ple_i <- c(ple_i, t)
-  
-  ple <- rbind(ple, ple_i)
+  plr_i <- c(plr_i, t)
+  plr <- rbind(plr, plr_i)
 }
 
 param_nms <- all_param_names(drop_alpha=T, drop_beta=F, directional)
@@ -134,11 +144,11 @@ for(p in param_nms){
 par(mfrow=c(1,1))
 
 which(ple$delta > 2)
-index_look <- 300
-ple[index_look, ]
+index_look <- 506
+plr[index_look, ]
 table(df$DATE[df$t == index_look])
 table(df$DATE[df$t == index_look-1])
-look <- c(ple$t[index_look], ple$t[index_look-1])
+look <- c(plr$t[index_look], plr$t[index_look-1])
 df %>%
   filter(t %in% look) %>%
   mutate(t = as.factor(t)) %>%
