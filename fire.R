@@ -56,7 +56,7 @@ df[month(df$DATE) %in% c(7, 8), ] %>%
          begin = day(DATE),
          length = as.integer(1),
          exit = as.integer(1)) %>%
-  ggplot(aes(x=LONG, y=LAT)) +
+  ggplot(aes(x=LONG, y=LAT, color=CONF)) +
   geom_point() +
   transition_events(start = begin,
                     end = begin + length,
