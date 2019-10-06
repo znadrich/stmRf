@@ -72,7 +72,7 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
   return(grid)
 }
 
-map_params <- function(loc, params, directional=T){
+map_params <- function(loc, params, directional=F){
   if (directional){
     if(loc == 'c') as.numeric(params['beta'])
     else if (loc == 'd') as.numeric(params['gamma_d'])
@@ -93,7 +93,7 @@ map_params <- function(loc, params, directional=T){
   
 }
 
-map_param_names <- function(loc, directional=T){
+map_param_names <- function(loc, directional=F){
   if (directional){
     inner_func <- function(loc){
       if(loc == 'c') 'beta'
@@ -120,7 +120,7 @@ map_param_names <- function(loc, directional=T){
   return(nm)
 }
 
-all_param_names <- function(drop_alpha=F, drop_beta=F, directional=T){
+all_param_names <- function(drop_alpha=F, drop_beta=F, directional=F){
   if (directional){
     directional_params <- c(
       'gamma_d', 'gamma_u', 
@@ -274,7 +274,7 @@ update_data <- function(x_i, x, params, interact){
   return(x)
 }
 
-eval_cliques <- function(grid_i, prior_grid, grid_size, directional=T){
+eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
     mutate(eta = map_param_names(eta, directional))
   
@@ -302,7 +302,7 @@ clique_delta <- function(param, event){
   return(d)
 }
 
-grid_cliques <- function(grid_i, prior_grid, grid_size, directional=T){
+grid_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   cliques <- eval_cliques(grid_i, prior_grid, grid_size, directional)
   
   grid <- cliques %>% 
@@ -319,6 +319,12 @@ grid_cliques <- function(grid_i, prior_grid, grid_size, directional=T){
       mutate(event=ifelse(alpha == 0, 0, 1)) 
   
   grid[is.na(grid)] <- 0
+
+  missing_params <- all_param_names(directional=directional)
+  missing_params <- missing_params[!(missing_params %in% colnames(grid))]
+  for (p in missing_params){
+    grid[, p] <- 0
+  }
 
   if (directional){
     grid$alpha <- 
@@ -338,7 +344,7 @@ grid_cliques <- function(grid_i, prior_grid, grid_size, directional=T){
   return(grid)
 }
 
-pmle <- function(cliques, directional=T, return_model=F){
+pmle <- function(cliques, directional=F, return_model=F){
   params <- all_param_names(drop_alpha=T, drop_beta=F, directional=directional)
   formula <- reformulate(params, 'event')
   log_reg <- glm(
@@ -373,7 +379,7 @@ pseudoliklihood <- function(grid_i, prior_grid, grid_size){
 
   cliques_reduced <- cliques_full
   cliques_reduced$gamma <- cliques_reduced$gamma_d + cliques_reduced$gamma_u
-  cliques_reduced$lambda <- cliques_reduced$ lambda_l + cliques_reduced$lambda_r
+  cliques_reduced$lambda <- cliques_reduced$lambda_l + cliques_reduced$lambda_r
   cliques_reduced$kappa <- cliques_reduced$kappa_dr + cliques_reduced$kappa_ul
   cliques_reduced$delta <- cliques_reduced$delta_ur + cliques_reduced$delta_dl
 
@@ -395,7 +401,7 @@ pseudoliklihood <- function(grid_i, prior_grid, grid_size){
   return(results)
 }
 
-ple_df <- function(directional=T){
+ple_df <- function(directional=F){
   if (directional){
     df <- data.frame(
       alpha=0,
