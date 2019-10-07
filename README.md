@@ -1,3 +1,7 @@
+# Spatial-Temporal Markov Random Field Tools
+
+Tools for analyzing data using Spatial-Temporal Markov Random Fields
+
 Install from GitHub with:
 
 ```R
