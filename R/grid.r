@@ -8,7 +8,8 @@ empty_grid <- function(grid_size){
 }
 
 get_prior_grid <- function(x, t){
-  prior_grid <- x[x$t == t-1, 1:2]
+  
+  prior_grid <- x[x$t == t-1, c('latitude', 'longitude')]
   if(is.null(prior_grid)){
     prior_grid <- data.frame()
   }
