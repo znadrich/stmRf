@@ -7,7 +7,7 @@ library(data.table)
 eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
     mutate(eta = map_param_names(eta, directional)) %>%
-    lazy_dt()
+    dtplyr::lazy_dt()
   
   if(!is.null(grid_i)){
     grid_i <- grid_i %>%
@@ -16,11 +16,11 @@ eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
     neighbors_prior <- neighbors_prior %>%
       as.data.frame() %>%
       rbind(grid_i) %>%
-      lazy_dt()
+      dtplyr::lazy_dt()
   }
   
   grid <- empty_grid(grid_size) %>%
-    lazy_dt() %>%
+    dtplyr::lazy_dt() %>%
     left_join(neighbors_prior, by = c('latitude', 'longitude'))
 
   return(grid)
