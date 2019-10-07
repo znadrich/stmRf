@@ -1,10 +1,9 @@
 library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(gganimate)
 library(dtplyr)
+library(tidyr)
 library(data.table)
 
+#' @export
 generate_params <- function(p_interact = .05, prev_interact = F){
   if(prev_interact) {
     p_interact <- .8
@@ -30,18 +29,21 @@ generate_params <- function(p_interact = .05, prev_interact = F){
   return(return_list)
 }
 
+#' @export
 generate_pixels <- function(alpha, size){
   p <- runif(size)
   x <- as.integer(p < boot::inv.logit(alpha))
   return(x)
 }
 
+#' @export
 generate_pixels_i_j <- function(theta_i_j, size){
   p <- runif(size)
   x <- as.integer(p < boot::inv.logit(theta_i_j))
   return(x)
 }
 
+#' @export
 generate_grid_init <- function(alpha, t, grid_size = 100){
   grid <- empty_grid(grid_size)
   
@@ -59,6 +61,7 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
   return(grid)
 }
 
+#' @export
 generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_size = 100){
   grid <- empty_grid(grid_size)
   
@@ -88,6 +91,7 @@ generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_s
   return(grid)
 }
 
+#' @export
 update_data <- function(x_i, x, params, interact){
   if(!is.null(x_i)){
     x_i$magnitude <- ifelse(interact, "high", "low")

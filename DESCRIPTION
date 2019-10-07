@@ -1,0 +1,29 @@
+Package: stmRf
+Title: Spatial-Temporal Markov Random Field tools
+Version: 0.1
+Authors@R: 
+    c(person(given = "Zack",
+             family = "Nadrich",
+             role = "cre",
+             email = "znadrich@gmail.com"))
+Description: Tools for analyzing data using Spatial-Temporal Markov Random Fields
+License: GPL (>= 2)
+URL: https://https://github.com/znadrich/stmRf
+Depends: 
+    R (>= 3.6.1)
+Imports:
+    dplyr,
+    dtplyr (>= 0.0.3.9000),
+    tidyr,
+    data.table,
+    sf,
+    maps,
+    maptools
+Suggests:
+    knitr
+VignetteBuilder: 
+    knitr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.1.1

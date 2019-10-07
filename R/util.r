@@ -1,3 +1,12 @@
+library(dplyr)
+library(dtplyr)
+library(tidyr)
+library(data.table)
+library(sf)
+library(maps)
+library(maptools)
+
+#' @export
 decimalplaces <- function(x) {
   if ((x %% 1) != 0) {
     nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed=TRUE)[[1]][[2]])
@@ -6,6 +15,7 @@ decimalplaces <- function(x) {
   }
 }
 
+#' @export
 plot_param <- function(estimate, param, dates){
   colors = c('red', 'blue', 'green', 'cyan')
   dates <- as.factor(dates)
@@ -22,6 +32,7 @@ plot_param <- function(estimate, param, dates){
   if(param == 'alpha') legend('topleft', legend = lvls, col = colors, lty=rep(1, length(lvls)))
 }
 
+#' @export
 latlong2state <- function(pointsDF) {
   # Prepare SpatialPolygons object with one SpatialPolygon
   # per state (plus DC, minus HI & AK)
@@ -42,6 +53,7 @@ latlong2state <- function(pointsDF) {
   stateNames[indices]
 }
 
+#' @export
 rescale_round <- function(x){
   x <- round(scales::rescale(x, c(0, 1)), 2)
   x <- round(x/.01)*.01

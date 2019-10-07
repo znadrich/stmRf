@@ -1,3 +1,9 @@
+library(dplyr)
+library(dtplyr)
+library(tidyr)
+library(data.table)
+
+#' @export
 eval_neighbors <- function(prior_grid, grid_size){
   g <- mapply(
     FUN = gen_neighbors,
@@ -18,6 +24,7 @@ eval_neighbors <- function(prior_grid, grid_size){
   return(g)
 }
 
+#' @export
 gen_neighbors <- function(i, j, grid_size){
   size <- 1/grid_size
   eta <- list(
@@ -26,6 +33,7 @@ gen_neighbors <- function(i, j, grid_size){
     dl = c(-1, -1), d = c(0, -1), dr = c(1, -1)
   ) %>% lapply(function(x) x*size)
   
+#' @export
   f <- function(t, size, eta, i, j){
     x <- eta[[t]]
     list(as.numeric(x[1] + i), as.numeric(x[2] + j), names(eta)[t])
@@ -43,6 +51,7 @@ gen_neighbors <- function(i, j, grid_size){
   return(neighbors)
 }
 
+#' @export
 has_neighbors <- function(grid, prior_grid){
   prior_grid$c <- 1
   grid_pairs <- grid %>%
@@ -51,6 +60,7 @@ has_neighbors <- function(grid, prior_grid){
   return(x)
 }
 
+#' @export
 which_neighbors <- function(grid, neighbors_prior){
   index_has_neighbors <- has_neighbors(grid, neighbors_prior)
   with_n_type <- grid[index_has_neighbors, ] %>%
@@ -58,6 +68,7 @@ which_neighbors <- function(grid, neighbors_prior){
   return(with_n_type)
 }
 
+#' @export
 neighbor_hood_calculations <- function(grid, prior_grid, grid_size, neighborhood_params){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size)
   neighbors <- which_neighbors(grid, neighbors_prior) %>%

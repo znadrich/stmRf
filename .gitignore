@@ -2,3 +2,5 @@
 *.gif
 *.pdf
 .Rhistory
+.Rproj.user
+*.Rproj

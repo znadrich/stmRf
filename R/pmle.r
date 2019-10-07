@@ -1,3 +1,9 @@
+library(dplyr)
+library(dtplyr)
+library(tidyr)
+library(data.table)
+
+#' @export
 pmle <- function(cliques, directional=F, return_model=F){
   params <- all_param_names(drop_alpha=T, drop_beta=F, directional=directional)
   formula <- reformulate(params, 'event')
@@ -17,12 +23,14 @@ pmle <- function(cliques, directional=F, return_model=F){
   return(ple)
 }
 
+#' @export
 get_lik <- function(glm, df){
   p <- predict(glm, df, type='response')
   log_lik <- sum(log(p*df$event + (1-p)*(1-df$event)))
   return(log_lik)
 }
 
+#' @export
 pseudoliklihood <- function(grid_i, prior_grid, grid_size){
   cliques_full <- grid_cliques(
     grid_i, 
@@ -55,6 +63,7 @@ pseudoliklihood <- function(grid_i, prior_grid, grid_size){
   return(results)
 }
 
+#' @export
 ple_df <- function(directional=F){
   if (directional){
     df <- data.frame(

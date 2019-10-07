@@ -1,9 +1,16 @@
+library(dplyr)
+library(dtplyr)
+library(tidyr)
+library(data.table)
+
+#' @export
 get_params <- function(i, neighbors, params){
   x <- neighbors[i, ]
   x$param_val <- map_params(x$eta, params)
   return(x)
 }
 
+#' @export
 all_param_names <- function(drop_alpha=F, drop_beta=F, directional=F){
   if (directional){
     directional_params <- c(
@@ -24,6 +31,7 @@ all_param_names <- function(drop_alpha=F, drop_beta=F, directional=F){
   return(v)
 }
 
+#' @export
 map_params <- function(loc, params, directional=F){
   if (directional){
     if(loc == 'c') as.numeric(params['beta'])
@@ -45,8 +53,10 @@ map_params <- function(loc, params, directional=F){
   
 }
 
+#' @export
 map_param_names <- function(loc, directional=F){
   if (directional){
+#' @export
     inner_func <- function(loc){
       if(loc == 'c') 'beta'
       else if (loc == 'd') 'gamma_d'
@@ -59,6 +69,7 @@ map_param_names <- function(loc, directional=F){
       else if (loc == 'dl') 'delta_dl'
     }
   } else {
+#' @export
     inner_func <- function(loc){
       if(loc == 'c') 'beta'
       else if (loc %in% c('u', 'd')) 'gamma'
@@ -72,6 +83,7 @@ map_param_names <- function(loc, directional=F){
   return(nm)
 }
 
+#' @export
 get_param_maginitude <- function(params){
   magnitude <- sum(as.numeric(params))
   

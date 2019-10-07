@@ -1,3 +1,9 @@
+library(dplyr)
+library(dtplyr)
+library(tidyr)
+library(data.table)
+
+#' @export
 eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
     mutate(eta = map_param_names(eta, directional)) %>%
@@ -20,6 +26,7 @@ eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   return(grid)
 }
 
+#' @export
 grid_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   cliques <- eval_cliques(grid_i, prior_grid, grid_size, directional)
   
