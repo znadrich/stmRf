@@ -2,6 +2,8 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(gganimate)
+library(dtplyr)
+library(data.table)
 
 generate_params <- function(p_interact = .05, prev_interact = F){
   if(prev_interact) {
@@ -164,7 +166,7 @@ eval_neighbors <- function(prior_grid, grid_size){
   
   g$latitude <- round(g$latitude, decimalplaces(1/grid_size))
   g$longitude <- round(g$longitude, decimalplaces(1/grid_size))
-  
+
   return(g)
 }
 
@@ -276,17 +278,24 @@ update_data <- function(x_i, x, params, interact){
 
 eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
-    mutate(eta = map_param_names(eta, directional))
+    mutate(eta = map_param_names(eta, directional)) %>%
+    lazy_dt()
   
   if(!is.null(grid_i)){
     grid_i <- grid_i %>%
       select(-t) %>%
       mutate(eta = 'alpha')
-    neighbors_prior <- rbind(neighbors_prior, grid_i)
+    neighbors_prior <- neighbors_prior %>%
+      as.data.frame() %>%
+      rbind(grid_i) %>%
+      lazy_dt()
   }
   
   grid <- empty_grid(grid_size) %>%
+    lazy_dt() %>%
     left_join(neighbors_prior, by = c('latitude', 'longitude'))
+
+  return(grid)
 }
 
 n_clique <- function(cliques){
@@ -309,14 +318,14 @@ grid_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
     mutate(eta=coalesce(eta, 'none')) %>% 
     group_by(latitude, longitude, eta) %>% 
     summarise(n=n()) %>%
+    as.data.frame() %>%
     spread(eta, n)
     
-    if(!('alpha' %in% colnames(grid))){
-      grid$alpha <- 0
-    } 
-    
-    grid <- grid %>%
-      mutate(event=ifelse(alpha == 0, 0, 1)) 
+  if(!('alpha' %in% colnames(grid))){
+    grid$alpha <- 0
+  } 
+  
+  grid$event <- ifelse(grid$alpha == 0, 0, 1)
   
   grid[is.na(grid)] <- 0
 
@@ -340,7 +349,7 @@ grid_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   } else {
     grid$alpha <- grid$beta+grid$delta+grid$gamma+grid$kappa+grid$lambda
   }
-    
+  
   return(grid)
 }
 
