@@ -6,21 +6,18 @@ library(data.table)
 #' @export
 eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
-    mutate(eta = map_param_names(eta, directional)) %>%
-    dtplyr::lazy_dt()
+    mutate(eta = map_param_names(eta, directional))
   
   if(!is.null(grid_i)){
     grid_i <- grid_i %>%
       select(-t) %>%
       mutate(eta = 'alpha')
+
     neighbors_prior <- neighbors_prior %>%
-      as.data.frame() %>%
-      rbind(grid_i) %>%
-      dtplyr::lazy_dt()
+      rbind(grid_i)
   }
   
   grid <- empty_grid(grid_size) %>%
-    dtplyr::lazy_dt() %>%
     left_join(neighbors_prior, by = c('latitude', 'longitude'))
 
   return(grid)
@@ -34,7 +31,6 @@ grid_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
     mutate(eta=coalesce(eta, 'none')) %>% 
     group_by(latitude, longitude, eta) %>% 
     summarise(n=n()) %>%
-    as.data.frame() %>%
     spread(eta, n)
     
   if(!('alpha' %in% colnames(grid))){
