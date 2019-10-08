@@ -24,13 +24,6 @@ pmle <- function(cliques, directional=F, return_model=F){
 }
 
 #' @export
-get_lik <- function(glm, df){
-  p <- predict(glm, df, type='response')
-  log_lik <- sum(log(p*df$event + (1-p)*(1-df$event)))
-  return(log_lik)
-}
-
-#' @export
 pseudoliklihood <- function(grid_i, prior_grid, grid_size){
   cliques_full <- grid_cliques(
     grid_i, 
@@ -48,10 +41,8 @@ pseudoliklihood <- function(grid_i, prior_grid, grid_size){
   full_model <- pmle(cliques_full, directional=T, return_model=T)
   reduced_model <- pmle(cliques_reduced, directional=F, return_model=T)
 
-  log_lik_full <- get_lik(full_model, cliques_full)
-  log_lik_red <- get_lik(reduced_model, cliques_reduced)
+  lr <- reduced_model$deviance - full_model$deviance
 
-  lr <- -2*(log_lik_red - log_lik_full)
   df <- length(full_model$coefficients) - length(reduced_model$coefficients)
   p <- 1-pchisq(lr, df)
 
