@@ -10,7 +10,7 @@ Description: Tools for analyzing data using Spatial-Temporal Markov Random Field
 License: GPL (>= 2)
 URL: https://https://github.com/znadrich/stmRf
 Depends: 
-    R (>= 3.6.1)
+    R (>= 3.5.0)
 Imports:
     dplyr,
     dtplyr (>= 0.0.3.9000),
