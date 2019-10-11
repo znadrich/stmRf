@@ -16,10 +16,7 @@ pmle <- function(cliques, directional=F, return_model=F){
   
   if (return_model) return(log_reg)
   ple <- log_reg$coefficients
-  
-  # Get standard error, if the coef blew up then set to 0
-  se <- sqrt(diag(vcov(log_reg)))
-  ple[se > 100] <- 0
+
   return(ple)
 }
 
