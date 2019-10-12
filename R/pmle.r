@@ -4,8 +4,7 @@ library(tidyr)
 library(data.table)
 
 #' @export
-pmle <- function(cliques, directional=F, return_model=F){
-  params <- all_param_names(drop_alpha=T, drop_beta=F, directional=directional)
+pmle <- function(cliques, params, return_model = F){
   formula <- reformulate(params, 'event')
   log_reg <- glm(
     formula,
@@ -24,7 +23,7 @@ pmle <- function(cliques, directional=F, return_model=F){
 }
 
 #' @export
-pseudoliklihood <- function(grid_i, prior_grid, grid_size){
+pseudoliklihood <- function(grid_i, prior_grid, grid_size, full_params, reduced_params){
   cliques_full <- grid_cliques(
     grid_i, 
     prior_grid, 
@@ -38,8 +37,8 @@ pseudoliklihood <- function(grid_i, prior_grid, grid_size){
   cliques_reduced$kappa <- cliques_reduced$kappa_dr + cliques_reduced$kappa_ul
   cliques_reduced$delta <- cliques_reduced$delta_ur + cliques_reduced$delta_dl
 
-  full_model <- pmle(cliques_full, directional=T, return_model=T)
-  reduced_model <- pmle(cliques_reduced, directional=F, return_model=T)
+  full_model <- pmle(cliques_full, full_params, return_model = TRUE)
+  reduced_model <- pmle(cliques_reduced, reduced_params, return_model = TRUE)
 
   lr <- reduced_model$deviance - full_model$deviance
 
