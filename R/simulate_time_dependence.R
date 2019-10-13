@@ -86,7 +86,6 @@ generate_grid_main <- function(alpha, prior_grid, neighborhood_params, grid_size
     grid <- grid[sample(nrow(grid), 1), ]
   }
   
-  grid$t <- t
   return(grid)
 }
 
