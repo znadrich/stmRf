@@ -64,7 +64,7 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
 #' @export
 generate_grid_main <- function(alpha, prior_grid, neighborhood_params, grid_size = 100, directional=F){
   x_i_tmp <- empty_grid(grid_size)
-  x_i_tmp$t <- t
+  x_i_tmp$t <- 0
   grid <- grid_cliques(
     grid_i = x_i_tmp,
     prior_grid = prior_grid,
