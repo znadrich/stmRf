@@ -4,9 +4,9 @@ library(tidyr)
 library(data.table)
 
 #' @export
-get_params <- function(i, neighbors, params){
+get_params <- function(i, neighbors, params, directional=F){
   x <- neighbors[i, ]
-  x$param_val <- map_params(x$eta, params)
+  x$param_val <- map_params(x$eta, params, directional=directional)
   return(x)
 }
 

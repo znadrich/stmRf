@@ -69,10 +69,10 @@ which_neighbors <- function(grid, neighbors_prior){
 }
 
 #' @export
-neighbor_hood_calculations <- function(grid, prior_grid, grid_size, neighborhood_params){
+neighbor_hood_calculations <- function(grid, prior_grid, grid_size, neighborhood_params, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size)
   neighbors <- which_neighbors(grid, neighbors_prior) %>%
-    lapply(1:nrow(.), get_params, neighbors = ., params = neighborhood_params) %>%
+    lapply(1:nrow(.), get_params, neighbors = ., params = neighborhood_params, directional=directional) %>%
     do.call(rbind, .)
   
   neighbors <- neighbors %>%

@@ -62,21 +62,20 @@ generate_grid_init <- function(alpha, t, grid_size = 100){
 }
 
 #' @export
-generate_grid_main <- function(alpha, prior_grid, t, neighborhood_params, grid_size = 100){
-  grid <- empty_grid(grid_size)
-  
-  if(nrow(prior_grid) > 0){
-    neighbors <- neighbor_hood_calculations(grid, prior_grid, grid_size, neighborhood_params)
-    theta_i_j <- grid %>%
-      left_join(neighbors, by = c('latitude', 'longitude')) %>%
-      mutate(theta = coalesce(eta_i_j, 0) + alpha) %>%
-      select(theta) %>%
-      unlist
-    
-    pixels <- generate_pixels_i_j(theta_i_j, nrow(grid))
-  } else {
-    pixels <- generate_pixels(alpha, nrow(grid))
-  }
+generate_grid_main <- function(alpha, prior_grid, neighborhood_params, grid_size = 100, directional=F){
+  x_i_tmp <- empty_grid(grid_size)
+  x_i_tmp$t <- t
+  grid <- grid_cliques(
+    grid_i = x_i_tmp,
+    prior_grid = prior_grid,
+    grid_size = grid_size,
+    directional = directional
+  )
+
+  params_v <- unlist(neighborhood_params[all_param_names(drop_alpha = T, directional = directional)])
+  n_v <- as.matrix(grid[, all_param_names(drop_alpha = T, directional = directional)])
+  grid$theta_i_j <- (n_v %*% params_v) + alpha
+  pixels <- generate_pixels_i_j(theta_i_j = grid$theta_i_j, size=nrow(grid))
   
   has_event <- which(pixels == 1)
   
