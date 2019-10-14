@@ -54,8 +54,17 @@ latlong2state <- function(pointsDF) {
 }
 
 #' @export
-rescale_round <- function(x){
+rescale_round <- function(x, grid_size=100){
+  if(!grid_size %in% c(20, 50, 100)){
+    stop("grid_size must be one of 20, 50, 100")
+  } else if(grid_size == 20){
+    scaler <- .05
+  } else if(grid_size == 50){
+    scaler <- .02
+  } else if(grid_size == 100){
+    scaler <- .01
+  }
   x <- round(scales::rescale(x, c(0, 1)), 2)
-  x <- round(x/.01)*.01
+  x <- round(x/scaler)*scaler
   return(x)
 }
