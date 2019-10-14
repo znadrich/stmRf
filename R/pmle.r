@@ -17,8 +17,11 @@ pmle <- function(cliques, params, return_model = F){
   ple <- log_reg$coefficients
   
   # Get standard error, if the coef blew up then set to 0
+  # Not alpha though
+  alpha <- ple[1]
   se <- sqrt(diag(vcov(log_reg)))
   ple[se > 100] <- 0
+  ple[1] <- alpha
   return(ple)
 }
 
