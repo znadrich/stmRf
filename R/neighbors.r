@@ -28,15 +28,9 @@ eval_neighbors <- function(prior_grid, grid_size){
 gen_neighbors <- function(i, j, grid_size){
   size <- 1/grid_size
   eta <- list(
-    c = c(0, 0), 
-    u = c(0, 1),  u = c(0, 2), 
-    d = c(0, -1), d = c(0, -2),
-    l = c(-1, 0), l = c(-2, 0), 
-    r = c(1, 0), r = c(2, 0),
-    ul = c(-1, 1), ul = c(-2, 1), ul = c(-1, 2), ul = c(-2, 2),
-    ur = c(1, 1), ur = c(2, 1), ur = c(1, 2), ur = c(2, 2),
-    dl = c(-1, -1), dl = c(-2, -1), dl = c(-1, -2), dl = c(-2, -2), 
-    dr = c(1, -1), dr = c(2, -1), dr = c(1, -2), dr = c(2, -2)
+    ul = c(-1, 1), u = c(0, 1), ur = c(1, 1),
+    l = c(-1, 0), c = c(0, 0), r = c(1, 0),
+    dl = c(-1, -1), d = c(0, -1), dr = c(1, -1)
   ) %>% lapply(function(x) x*size)
   
   f <- function(t, size, eta, i, j){
