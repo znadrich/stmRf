@@ -70,6 +70,14 @@ ple_df <- function(directional=F){
       kappa_ul=0,
       delta_ur=0,
       delta_dl=0,
+      gamma_dd=0,
+      gamma_uu=0,
+      lambda_ll=0,
+      lambda_rr=0,
+      kappa_drdr=0,
+      kappa_ulul=0,
+      delta_urur=0,
+      delta_dldl=0,
       t=1
     )
   } else {
