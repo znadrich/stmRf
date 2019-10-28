@@ -30,7 +30,10 @@ gen_neighbors <- function(i, j, grid_size){
   eta <- list(
     ul = c(-1, 1), u = c(0, 1), ur = c(1, 1),
     l = c(-1, 0), c = c(0, 0), r = c(1, 0),
-    dl = c(-1, -1), d = c(0, -1), dr = c(1, -1)
+    dl = c(-1, -1), d = c(0, -1), dr = c(1, -1),
+    ulul = c(-2, 2), uu = c(0, 2), urur = c(2, 2),
+    ll = c(-2, 0), rr = c(2, 0),
+    dldl = c(-2, -2), dd = c(0, -2), drdr = c(2, -2)
   ) %>% lapply(function(x) x*size)
   
   f <- function(t, size, eta, i, j){
