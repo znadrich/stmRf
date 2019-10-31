@@ -64,7 +64,6 @@ map_params <- function(loc, params, directional=F){
 #' @export
 map_param_names <- function(loc, directional=F){
   if (directional){
-#' @export
     inner_func <- function(loc){
       if(loc == 'c') 'beta'
       else if (loc == 'd') 'gamma_d'
@@ -85,7 +84,6 @@ map_param_names <- function(loc, directional=F){
       else if (loc == 'dldl') 'delta_dldl'
     }
   } else {
-#' @export
     inner_func <- function(loc){
       if(loc == 'c') 'beta'
       else if (loc %in% c('u', 'd')) 'gamma'
