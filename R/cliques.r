@@ -52,16 +52,8 @@ grid_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   }
 
   if (directional){
-    grid$alpha <- 
-        grid$beta +
-        grid$gamma_d +
-        grid$gamma_u +
-        grid$lambda_l +
-        grid$lambda_r +
-        grid$kappa_dr +
-        grid$kappa_ul +
-        grid$delta_ur +
-        grid$delta_dl
+    nms <- all_param_names(drop_alpha=T, drop_beta=F, directional=directional)
+    grid$alpha <- rowSums(grid[, nms]) 
   } else {
     grid$alpha <- grid$beta+grid$delta+grid$gamma+grid$kappa+grid$lambda
   }
