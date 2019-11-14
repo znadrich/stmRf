@@ -1,8 +1,4 @@
 
-library(sf)
-library(maps)
-library(maptools)
-
 #' @export
 decimalplaces <- function(x) {
   if ((x %% 1) != 0) {
