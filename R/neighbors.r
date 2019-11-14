@@ -1,7 +1,4 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
+
 
 #' @export
 eval_neighbors <- function(prior_grid, grid_size){

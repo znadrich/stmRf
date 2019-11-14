@@ -2,7 +2,7 @@
 
 Tools for analyzing data using Spatial-Temporal Markov Random Fields
 
-Requires dtplyr (>= 0.0.3.9000), currently not on CRAN. Install the development version from GitHub with:
+Requires dtplyr (>= 1.0), currently not on CRAN(?). Install the development version from GitHub with:
 
 ```R
 # install.packages("devtools")

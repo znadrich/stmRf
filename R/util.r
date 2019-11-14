@@ -1,7 +1,4 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
+
 library(sf)
 library(maps)
 library(maptools)

@@ -1,7 +1,4 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
+
 
 #' @export
 pmle <- function(cliques, params, return_model = F){

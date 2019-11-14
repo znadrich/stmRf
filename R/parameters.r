@@ -1,7 +1,4 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
+
 
 #' @export
 get_params <- function(i, neighbors, params, directional=F){

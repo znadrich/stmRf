@@ -1,7 +1,4 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
+
 
 #' @export
 eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
