@@ -1,6 +1,6 @@
 Package: stmRf
 Title: Spatial-Temporal Markov Random Field Tools
-Version: 0.14
+Version: 0.15
 Authors@R: 
     c(person(given = "Zack",
              family = "Nadrich",
@@ -13,7 +13,7 @@ Depends:
     R (>= 3.6.1)
 Imports:
     dplyr,
-    dtplyr (>= 0.0.3.9000),
+    dtplyr (>= 1.0),
     tidyr,
     data.table,
     sf,

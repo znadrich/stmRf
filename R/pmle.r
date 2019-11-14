@@ -26,6 +26,66 @@ pmle <- function(cliques, params, return_model = F){
 }
 
 #' @export
+pmle_lasso <- function(cliques, params, return_model = F){
+  # glmnet throws error due to CV not having enough points in class
+  if(sum(cliques$event) < 10){
+    ple <- pmle(cliques, params, return_model)
+  } else {
+    formula <- reformulate(params)
+    mm <- model.matrix(formula, cliques)
+    cv.lasso <- glmnet(
+      x=mm[, -1],
+      y=as.factor(cliques$event),
+      family='binomial',
+      maxit=1000,
+      standardize=T
+    )
+    s <- cv.lasso$lambda[which.min(deviance(cv.lasso))]
+    coef_choose <- as.numeric(coef(cv.lasso, s=s))[-1] # drop alpha
+    param_choose <- params[which(coef_choose != 0)]
+    if(length(param_choose) != 0){
+      ple_chosen <- pmle(cliques, param_choose, return_model)
+      ple <- rep(0, length(params)+1)
+      names(ple) <- c('alpha', params)
+      ple[1] <- ple_chosen[1]
+      
+      for(p in params){
+        if(p %in% names(ple_chosen)){
+          ple[p] <- ple_chosen[p]
+        }
+      }
+    } else {
+      ple <- pmle(cliques, params, return_model)
+    }
+    
+  }
+  return(ple)
+}
+
+#' @export
+pmle_ridge <- function(cliques, params, return_model = F){
+  # glmnet throws error due to CV not having enough points in class
+  if(sum(cliques$event) < 10){
+    ple <- pmle(cliques, params, return_model)
+  } else {
+    formula <- reformulate(params)
+    mm <- model.matrix(formula, cliques)
+    cv.lasso <- glmnet(
+      x=mm[, -1],
+      y=as.factor(cliques$event),
+      family='binomial',
+      alpha=0,
+      maxit=1000,
+      standardize=T
+    )
+    s <- cv.lasso$lambda[which.min(deviance(cv.lasso))]
+    ple <- as.numeric(coef(cv.lasso, s=s))
+    
+  }
+  return(ple)
+}
+
+#' @export
 pseudoliklihood <- function(grid_i, prior_grid, grid_size, full_params, reduced_params){
   cliques_full <- grid_cliques(
     grid_i, 
