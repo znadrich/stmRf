@@ -1,8 +1,3 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
-
 #' @export
 eval_neighbors <- function(prior_grid, grid_size){
   g <- mapply(
@@ -30,7 +25,13 @@ gen_neighbors <- function(i, j, grid_size){
   eta <- list(
     ul = c(-1, 1), u = c(0, 1), ur = c(1, 1),
     l = c(-1, 0), c = c(0, 0), r = c(1, 0),
-    dl = c(-1, -1), d = c(0, -1), dr = c(1, -1)
+    dl = c(-1, -1), d = c(0, -1), dr = c(1, -1),
+    dd = c(0, -2), uu = c(0, 2),
+    ll = c(-2, 0), rr = c(2, 0),    
+    ulul = c(-2, 1), ulul = c(-1, 2), ulul = c(-2, 2),
+    urur = c(2, 1), urur = c(1, 2), urur = c(2, 2),
+    dldl = c(-2, -1), dldl = c(-1, -2), dldl = c(-2, -2), 
+    drdr = c(2, -1), drdr = c(1, -2), drdr = c(2, -2)
   ) %>% lapply(function(x) x*size)
   
   f <- function(t, size, eta, i, j){

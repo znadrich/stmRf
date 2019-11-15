@@ -1,11 +1,3 @@
-library(dplyr)
-library(dtplyr)
-library(tidyr)
-library(data.table)
-library(sf)
-library(maps)
-library(maptools)
-
 #' @export
 decimalplaces <- function(x) {
   if ((x %% 1) != 0) {
@@ -67,4 +59,13 @@ rescale_round <- function(x, grid_size=100){
   x <- round(scales::rescale(x, c(0, 1)), 2)
   x <- round(x/scaler)*scaler
   return(x)
+}
+
+#' @export
+fix_hr <- function(df){
+  df$hr[df$hr=="0800"] <- "0900" 
+  df$hr[df$hr=="1000"] <- "1100" 
+  df$hr[df$hr=="1900"] <- "2000" 
+  df$hr[df$hr=="2200"] <- "2100" 
+  return(df)
 }
