@@ -1,5 +1,3 @@
-
-
 #' @export
 empty_grid <- function(grid_size){
   grid <- expand.grid(

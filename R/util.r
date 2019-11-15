@@ -1,4 +1,3 @@
-
 #' @export
 decimalplaces <- function(x) {
   if ((x %% 1) != 0) {

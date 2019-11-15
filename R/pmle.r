@@ -1,5 +1,3 @@
-
-
 #' @export
 pmle <- function(cliques, params, return_model = F){
   formula <- reformulate(params, 'event')

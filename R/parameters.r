@@ -1,5 +1,3 @@
-
-
 #' @export
 get_params <- function(i, neighbors, params, directional=F){
   x <- neighbors[i, ]

@@ -1,5 +1,3 @@
-
-
 #' @export
 eval_neighbors <- function(prior_grid, grid_size){
   g <- mapply(

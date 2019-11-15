@@ -1,5 +1,3 @@
-
-
 #' @export
 eval_cliques <- function(grid_i, prior_grid, grid_size, directional=F){
   neighbors_prior <- eval_neighbors(prior_grid, grid_size) %>%
