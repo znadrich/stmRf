@@ -32,9 +32,9 @@ generate_pixels <- function(alpha, size){
 }
 
 #' @export
-generate_pixels_i_j <- function(theta_i_j, size){
-  p <- runif(size)
-  x <- as.integer(p < boot::inv.logit(theta_i_j))
+generate_pixels_i_j <- function(theta_i_j){
+  p <- boot::inv.logit(theta_i_j)
+  x <- sapply(1:length(p), function(x) rbinom(1, 1, p[x]))
   return(x)
 }
 
@@ -66,17 +66,19 @@ generate_grid_main <- function(alpha, prior_grid, neighborhood_params, grid_size
     grid_size = grid_size,
     directional = directional
   )
-
-  params_v <- unlist(neighborhood_params[all_param_names(drop_alpha = T, directional = directional)])
-  n_v <- as.matrix(grid[, all_param_names(drop_alpha = T, directional = directional)])
-  grid$theta_i_j <- (n_v %*% params_v) + alpha
-  pixels <- generate_pixels_i_j(theta_i_j = grid$theta_i_j, size=nrow(grid))
+  grid <- grid[grid$alpha > 0, ] 
+  nms <- all_param_names(drop_alpha = T, drop_beta=F, directional = directional)
+  params_v <- unlist(neighborhood_params[nms])
+  n_v <- as.matrix(grid[, nms])
+  theta_i_j <- (n_v %*% params_v) + alpha
+  grid$theta_i_j <- theta_i_j[, 1]
+  pixels <- generate_pixels_i_j(theta_i_j = grid$theta_i_j)
   
   has_event <- which(pixels == 1)
   
   grid <- grid[has_event, ]
   
-  if(nrow(grid) == 0){    
+  if(nrow(grid) == 0){
     grid <- empty_grid(grid_size)
     grid <- grid[sample(nrow(grid), 1), ]
   }
