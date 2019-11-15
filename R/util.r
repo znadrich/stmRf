@@ -60,3 +60,12 @@ rescale_round <- function(x, grid_size=100){
   x <- round(x/scaler)*scaler
   return(x)
 }
+
+#' @export
+fix_hr <- function(df){
+  df$hr[df$hr=="0800"] <- "0900" 
+  df$hr[df$hr=="1000"] <- "1100" 
+  df$hr[df$hr=="1900"] <- "2000" 
+  df$hr[df$hr=="2200"] <- "2100" 
+  return(df)
+}
