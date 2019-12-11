@@ -69,3 +69,38 @@ fix_hr <- function(df){
   df$hr[df$hr=="2200"] <- "2100" 
   return(df)
 }
+
+dot <- function(u, v){
+  return((u%*%v)[1])
+}
+
+cos_angle_btwn <- function(u, v){
+  dot_prod <- dot(u, v)
+  mag_prod <- dot(u, u)*dot(v, v)
+  cos_angle <- dot_prod/mag_prod
+  return(cos_angle)
+}
+
+#' @export
+project_scalar_direction <- function(theta, mag, v){
+  u <- c(sin(pi*theta/180), cos(pi*theta/180))
+  cos_angle <- cos_angle_btwn(u, v)
+  scalar_proj <- mag*cos_angle
+  return(scalar_proj)
+}
+
+#' @export 
+wind_projection <- function(wind_direction, wind_speed, coord){
+  if(wind_speed == '999' | wind_direction == '999'){
+    return(0)
+  } else {
+    wind_direction <- as.numeric(wind_direction)
+    wind_speed <- as.numeric(wind_speed)
+    scalar_proj <- project_scalar_direction(
+      theta=wind_direction,
+      mag=wind_speed,
+      v=coord
+    )
+    return(scalar_proj)
+  }
+}
