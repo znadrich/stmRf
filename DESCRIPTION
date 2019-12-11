@@ -1,6 +1,6 @@
 Package: stmRf
 Title: Spatial-Temporal Markov Random Field Tools
-Version: 0.16
+Version: 0.17
 Authors@R: 
     c(person(given = "Zack",
              family = "Nadrich",
