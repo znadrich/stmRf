@@ -28,14 +28,14 @@ pmle_lasso <- function(cliques, params, return_model = F){
   } else {
     formula <- reformulate(params)
     mm <- model.matrix(formula, cliques)
-    cv.lasso <- glmnet(
+    cv.lasso <- cv.glmnet(
       x=mm[, -1],
       y=as.factor(cliques$event),
       family='binomial',
       maxit=1000,
       standardize=T
     )
-    s <- cv.lasso$lambda[which.min(deviance(cv.lasso))]
+    s <- cv.lasso$lambda.1se
     coef_choose <- as.numeric(coef(cv.lasso, s=s))[-1] # drop alpha
     param_choose <- params[which(coef_choose != 0)]
     if(length(param_choose) != 0){
